@@ -7,7 +7,7 @@ export interface Book {
   price: string;
 }
 
-export interface Store {
+export interface Stock {
   store: string;
   address: string;
   stock: number;
@@ -23,7 +23,13 @@ export interface StoreLocation {
   stockPlaceName: string;
 }
 
+export interface StockWithStore {
+  stockInfo: Stock;
+  storeLocation: StoreLocation;
+}
+
 export interface BookList extends Array<Book> {}
-export interface StoreByRegion extends Array<Store> {}
-export interface StoreList extends Array<StoreByRegion> {}
+export interface StockByRegion extends Array<Stock> {}
+export interface StockList extends Array<StockByRegion> {}
 export interface StoreLocationList extends Array<StoreLocation> {}
+export interface StockWithStoreList extends Array<StockWithStore> {}

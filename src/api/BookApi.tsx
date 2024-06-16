@@ -1,4 +1,4 @@
-import { BookList, StoreList } from "../types/BooksType";
+import { BookList, StockList } from "../types/BooksType";
 
 export interface SearchReqQuery {
   s: string;
@@ -22,7 +22,7 @@ class BookApi {
 
   static stockRequest = (data: StockReqQuery) => {
     console.log("Request Stock Api");
-    return this.apiRequest(ApiType.stock, data) as Promise<StoreList>;
+    return this.apiRequest(ApiType.stock, data) as Promise<StockList>;
   };
 
   private static apiRequest = async (type: ApiType, data: SearchReqQuery | StockReqQuery) => {

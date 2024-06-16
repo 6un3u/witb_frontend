@@ -2,22 +2,62 @@ import { useLayoutEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import BookApi, { StockReqQuery } from "../api/BookApi";
-import { StoreList, StoreLocationList } from "../types/BooksType";
+import { StockList, StockWithStoreList, StoreLocationList } from "../types/BooksType";
 import MapApi from "../api/MapApi";
-import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk";
+import { Map, MapMarker, useKakaoLoader, useMap } from "react-kakao-maps-sdk";
 import React from "react";
 
-type storeLocationProps = {
-  stores: StoreList;
-  storeLocationList: StoreLocationList;
-  setStoreLocationList: React.Dispatch<React.SetStateAction<StoreLocationList>>;
+type stockWithStoreListProps = {
+  stockWithStoreList: StockWithStoreList;
 };
-const StoreLocationOnMapAsync: React.FC<storeLocationProps> = ({ stores, storeLocationList, setStoreLocationList }: storeLocationProps) => {
-  const [storeLocationInsideList, setStoreLocationInsideList] = useState<StoreLocationList>([]);
+const MarkerContainer: React.FC<stockWithStoreListProps> = ({ stockWithStoreList }) => {
+  // 다른 머키 div hide
+  // 선택한 마커 div 띄우기
+  const map = useMap();
+  const [isContentVisible, setIsContentVisible] = useState(false);
+
+  // const clickEvent = () {
+
+  // }
+
+  return (
+    <>
+      {stockWithStoreList.map((storeWithLocation) => (
+        <MapMarker
+          key={storeWithLocation.storeLocation.id}
+          position={{ lng: storeWithLocation.storeLocation.x, lat: storeWithLocation.storeLocation.y }}
+          onClick={(marker) => {
+            setIsContentVisible(false);
+            map.panTo(marker.getPosition());
+            setIsContentVisible(true);
+          }}
+          // onMouseOver={() => setIsContentVisible(true)}
+          // onMouseOut={() => setIsContentVisible(false)}
+          clickable={true}
+        >
+          {isContentVisible && (
+            <>
+              <div style={{ color: "#000" }}>{storeWithLocation.stockInfo.store}</div>
+              <div style={{ color: "#000" }}>{storeWithLocation.stockInfo.phone}</div>
+            </>
+          )}
+        </MapMarker>
+      ))}
+    </>
+  );
+};
+
+type storeLocationProps = {
+  stockByStore: StockList;
+  storeLocationList: StockWithStoreList;
+  setStoreLocationList: React.Dispatch<React.SetStateAction<StockWithStoreList>>;
+};
+const StoreLocationOnMapAsync: React.FC<storeLocationProps> = ({ stockByStore, storeLocationList, setStoreLocationList }: storeLocationProps) => {
+  const [storeLocationInsideList, setStoreLocationInsideList] = useState<StockWithStoreList>([]);
   const [loading, setLoading] = useState(true);
 
   const getStoreLocation = async () => {
-    const stockLocationResult: StoreLocationList = await MapApi.getStoresLocationInfo(stores);
+    const stockLocationResult: StockWithStoreList = await MapApi.getStoresLocationInfo(stockByStore);
     setStoreLocationList(stockLocationResult);
     setStoreLocationInsideList(stockLocationResult);
     setLoading(false);
@@ -27,9 +67,9 @@ const StoreLocationOnMapAsync: React.FC<storeLocationProps> = ({ stores, storeLo
 
   useLayoutEffect(() => {
     console.log("[StockPage][StoreLocation] Watching...");
-    if (stores.length !== 0) getStoreLocation();
+    if (stockByStore.length !== 0) getStoreLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stores]);
+  }, [stockByStore]);
 
   return (
     <div>
@@ -42,11 +82,13 @@ const StoreLocationOnMapAsync: React.FC<storeLocationProps> = ({ stores, storeLo
           ) : (
             <>
               <Map center={{ lng: 126.977908555263, lat: 37.5707974563789 }} style={{ width: "100%", height: "500px" }}>
-                {storeLocationInsideList.map((store) => (
-                  <MapMarker key={store.id} position={{ lng: store.x, lat: store.y }}>
-                    <div style={{ color: "#000" }}>{store.placeName}</div>
+                {/* {storeLocationInsideList.map((storeWithLocation) => (
+                  <MapMarker key={storeWithLocation.storeLocation.id} position={{ lng: storeWithLocation.storeLocation.x, lat: storeWithLocation.storeLocation.y }} clickable={true}>
+                    <div style={{ color: "#000" }}>{storeWithLocation.stockInfo.store}</div>
+                    <div style={{ color: "#000" }}>{storeWithLocation.stockInfo.phone}</div>
                   </MapMarker>
-                ))}
+                ))} */}
+                <MarkerContainer stockWithStoreList={storeLocationInsideList}></MarkerContainer>
               </Map>
             </>
           )}
@@ -58,29 +100,29 @@ const StoreLocationOnMapAsync: React.FC<storeLocationProps> = ({ stores, storeLo
 
 type stockSearchQuery = {
   query: StockReqQuery;
-  stores: StoreList;
-  setStoreList: React.Dispatch<React.SetStateAction<StoreList>>;
+  stockByStore: StockList;
+  setStockByStore: React.Dispatch<React.SetStateAction<StockList>>;
 };
 
-const StoreListComponent: React.FC<stockSearchQuery> = ({ query, stores, setStoreList }: stockSearchQuery) => {
-  console.log("[StockPage][StoreList]: Start");
+const StockByStore: React.FC<stockSearchQuery> = ({ query, stockByStore, setStockByStore: setStoreList }: stockSearchQuery) => {
+  console.log("[StockPage][StockList]: Start");
   const [loading, setLoading] = useState(true);
-  const [storeInsideList, setStoreInsideList] = useState<StoreList>([]);
+  const [storeInsideList, setStoreInsideList] = useState<StockList>([]);
 
   const getStock = async () => {
     const stockResult = await BookApi.stockRequest(query);
     setStoreList(stockResult);
     setStoreInsideList(stockResult);
     setLoading(false);
-    console.log("[StockPage][StoreList]: Set Store List");
+    console.log("[StockPage][StockList]: Set Store List");
   };
 
   useLayoutEffect(() => {
-    console.log("[StockPage][StoreList] Watching...");
-    if (stores.length === 0) getStock();
+    console.log("[StockPage][StockList] Watching...");
+    if (stockByStore.length === 0) getStock();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stores]);
+  }, [stockByStore]);
 
   return (
     <div>
@@ -119,15 +161,15 @@ function Stock() {
   const [mapLoading, mapError] = useKakaoLoader({
     appkey: "f3d2075fccd2daa2b4324fc9e39457e6", // 발급 받은 APPKEY
   });
-  const [storeList, setStoreList] = useState<StoreList>([]);
-  const [storeLocationList, setStoreLocationList] = useState<StoreLocationList>([]);
+  const [stockByStore, setStockByStore] = useState<StockList>([]);
+  const [storeLocationList, setStoreLocationList] = useState<StockWithStoreList>([]);
 
   return (
     <>
-      {console.log("TOPPAGE!!", storeList, storeLocationList)}
-      {console.log("TOPPAGE!!", storeList.length, storeLocationList.length)}
-      <StoreListComponent query={stockQuery} stores={storeList} setStoreList={setStoreList} />
-      <StoreLocationOnMapAsync stores={storeList} storeLocationList={storeLocationList} setStoreLocationList={setStoreLocationList}></StoreLocationOnMapAsync>
+      {console.log("TOPPAGE!!", stockByStore, storeLocationList)}
+      {console.log("TOPPAGE!!", stockByStore.length, storeLocationList.length)}
+      <StockByStore query={stockQuery} stockByStore={stockByStore} setStockByStore={setStockByStore} />
+      <StoreLocationOnMapAsync stockByStore={stockByStore} storeLocationList={storeLocationList} setStoreLocationList={setStoreLocationList}></StoreLocationOnMapAsync>
     </>
   );
 }

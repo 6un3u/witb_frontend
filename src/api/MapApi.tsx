@@ -1,4 +1,4 @@
-import { StoreList, StoreLocation, StoreLocationList } from "../types/BooksType";
+import { StockList, StockWithStore, StockWithStoreList, StoreLocation, StoreLocationList } from "../types/BooksType";
 
 class MapApi {
   private static restApiUrl = process.env.REACT_APP_KAKAOMAP_REST_API_KEYWORD_URL;
@@ -8,11 +8,11 @@ class MapApi {
   static getStoreMapInfo = (store: string) => {
     return this.storeInfo(store) as Promise<StoreLocation>;
   };
-  static getStoresLocationInfo = (stores: StoreList) => {
-    return this.getInfoFromStoreList(stores) as Promise<StoreLocationList>;
+  static getStoresLocationInfo = (stores: StockList) => {
+    return this.getInfoFromStoreList(stores) as Promise<StockWithStoreList>;
   };
 
-  static getInfoFromStoreList1 = async (stores: StoreList) => {
+  static getInfoFromStoreList1 = async (stores: StockList) => {
     console.log("[MapApi]: getInfoFromStoreList Func called!");
     console.log("[MapApi]: arg", stores);
 
@@ -21,8 +21,8 @@ class MapApi {
     return storeLocationList;
   };
 
-  static getInfoFromStoreList = async (stores: StoreList): Promise<StoreLocationList> => {
-    const results: StoreLocationList = [];
+  static getInfoFromStoreList = async (stores: StockList): Promise<StockWithStoreList> => {
+    const results: StockWithStoreList = [];
 
     await Promise.all(
       stores.flatMap((regionStores) =>
@@ -30,13 +30,13 @@ class MapApi {
           if (store.stock !== 0) {
             const res = await this.storeInfo(store.store);
             if (res) {
-              results.push(res);
+              const stockWithStore: StockWithStore = { stockInfo: store, storeLocation: res };
+              results.push(stockWithStore);
             }
           }
         })
       )
     );
-    console.log(results);
 
     return results;
   };
