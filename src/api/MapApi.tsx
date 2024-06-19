@@ -5,23 +5,15 @@ class MapApi {
   private static restApiKey = process.env.REACT_APP_KAKAOMAP_REST_API_KEY;
   private static jsKey = process.env.REACT_APP_KAKAOMAP_JS_KEY;
 
-  static getStoreMapInfo = (store: string) => {
+  static getStoreMapInfo = (store: string): Promise<StoreLocation> => {
     return this.storeInfo(store) as Promise<StoreLocation>;
   };
-  static getStoresLocationInfo = (stores: StockList) => {
+  static getStoresLocationInfo = (stores: StockList): Promise<StockWithStoreList> => {
     return this.getInfoFromStoreList(stores) as Promise<StockWithStoreList>;
   };
 
-  static getInfoFromStoreList1 = async (stores: StockList) => {
-    console.log("[MapApi]: getInfoFromStoreList Func called!");
-    console.log("[MapApi]: arg", stores);
-
-    const storeLocationList = await Promise.all(stores.flatMap((region) => region.map(async (store) => await this.storeInfo(store.store))));
-
-    return storeLocationList;
-  };
-
   static getInfoFromStoreList = async (stores: StockList): Promise<StockWithStoreList> => {
+    console.info("[*] Call Map Api", stores);
     const results: StockWithStoreList = [];
 
     await Promise.all(
@@ -41,7 +33,7 @@ class MapApi {
     return results;
   };
 
-  private static storeInfo = async (query: string) => {
+  private static storeInfo = async (query: string): Promise<StoreLocation | null> => {
     const apiUrl = encodeURI(`${this.restApiUrl}?query=교보문고 ${query}`.replace("팝업", ""));
 
     const res = await fetch(apiUrl, {
@@ -50,15 +42,15 @@ class MapApi {
         Authorization: `KakaoAK ${this.restApiKey}`,
       },
     });
+
     const json = await res.json();
     const data = json["documents"][0];
-
-    let storeMapInfo: StoreLocation;
 
     if (!data) {
       return null;
     }
-    storeMapInfo = {
+
+    let storeMapInfo: StoreLocation = {
       id: data["id"],
       x: data["x"],
       y: data["y"],

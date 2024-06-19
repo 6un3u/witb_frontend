@@ -1,3 +1,4 @@
+import { error } from "console";
 import { BookList, StockList } from "../types/BooksType";
 
 export interface SearchReqQuery {
@@ -16,12 +17,18 @@ class BookApi {
   private static apiUrl = process.env.REACT_APP_API_URL;
 
   static searchRequest = (data: SearchReqQuery) => {
-    console.log("Request Search Api");
+    console.log("[*] Call Search Api");
+    if (data.s === "") {
+      throw new Error("Invalid Search Query");
+    }
     return this.apiRequest(ApiType.search, data) as Promise<BookList>;
   };
 
   static stockRequest = (data: StockReqQuery) => {
-    console.log("Request Stock Api");
+    console.log("[*] Call Stock Api");
+    if (data.id === "") {
+      throw new Error("Invalid BookId");
+    }
     return this.apiRequest(ApiType.stock, data) as Promise<StockList>;
   };
 

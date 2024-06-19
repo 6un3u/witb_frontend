@@ -1,21 +1,22 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 import BookApi from "../api/BookApi";
 import { BookList } from "../types/BooksType";
 import BookCard from "../components/BookCard";
 import Loading from "../components/Loading";
+import { useBookDispatch, useBookState } from "../types/BookContext";
 
 function SelectBook() {
   const [loading, setLoading] = useState(true);
   const [stockOut, setStockOut] = useState(false);
-  const [bookList, setBookList] = useState<BookList>([]);
-  const location = useLocation();
+
+  const state = useBookState();
+  const dispatch = useBookDispatch();
 
   const getBookList = async () => {
-    const searchResult: BookList = await BookApi.searchRequest(location.state.data);
+    const searchResult: BookList = await BookApi.searchRequest(state.searchQuery);
     if (searchResult) {
-      setBookList(searchResult);
+      dispatch({ type: "SET_BOOK_LIST", bookList: searchResult });
     } else {
       setStockOut(true);
     }
@@ -33,11 +34,11 @@ function SelectBook() {
         <div>
           <Loading />
         </div>
-      ) : bookList.length === 0 && stockOut ? (
+      ) : state.bookList.length === 0 && stockOut ? (
         "검색 결과 없음"
       ) : (
         <div>
-          {bookList.map((book) => (
+          {state.bookList.map((book) => (
             <BookCard key={book.id} id={book.id} title={book.title} author={book.author} publisher={book.publisher} cover={book.cover} price={book.price}></BookCard>
           ))}
         </div>

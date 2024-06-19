@@ -4,6 +4,7 @@ import "./App.css";
 import Search from "./pages/SearchPage";
 import SelectBook from "./pages/SelectBookPage";
 import Stock from "./pages/StockPage";
+import { BookProvider } from "./types/BookContext";
 
 const router = createBrowserRouter([
   {
@@ -21,7 +22,11 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <BookProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </BookProvider>
+  );
 }
 
 export default App;
